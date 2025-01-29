@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import styled from 'styled-components';
@@ -14,49 +15,45 @@ interface IToDoGroupProps {
   items: IItem[];
 }
 
-const Container = styled.div`
-  padding: 16px;
-  background-color: #e6e6e6;
+const Board = styled.div`
+  padding: 20px 10px;
+  background-color: ${(props) => props.theme.boardColor};
   border-radius: 5px;
+  min-height: 200px;
 
   > h3 {
-    font-size: 18px;
-    font-weight: 600;
+    color: #5c5c5c;
+    font-size: 15px;
+    font-weight: 700;
   }
 
   > ul {
-    margin-top: 10px;
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    background-color: #c3c3c3;
+    gap: 8px;
     border-radius: 4px;
-    padding: 8px;
   }
 `;
 
-const ToDoGroup = ({ id, title, items }: IToDoGroupProps) => {
+const ToDoGroup = memo(({ id, title, items }: IToDoGroupProps) => {
   const { setNodeRef } = useDroppable({ id });
 
   return (
     <SortableContext id={id} items={items}>
-      <Container>
+      <Board ref={setNodeRef}>
         <h3>{title}</h3>
 
-        <ul ref={setNodeRef}>
-          {items.length > 0 ? (
-            items.map((item) => (
-              <ToDoItem key={item.id} id={item.id}>
-                {item.content}
-              </ToDoItem>
-            ))
-          ) : (
-            <li>Drag Here</li>
-          )}
+        <ul>
+          {items.map((item) => (
+            <ToDoItem key={item.id} id={item.id}>
+              {item.content}
+            </ToDoItem>
+          ))}
         </ul>
-      </Container>
+      </Board>
     </SortableContext>
   );
-};
+});
 
 export default ToDoGroup;

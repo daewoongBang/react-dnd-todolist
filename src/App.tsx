@@ -1,5 +1,6 @@
 import ToDoPage from 'pages/ToDo';
-import { createGlobalStyle } from 'styled-components';
+import { createGlobalStyle, ThemeProvider } from 'styled-components';
+import { lightTheme } from 'theme';
 
 const GlobalStyle = createGlobalStyle`
   html, body, div, span, applet, object, iframe,
@@ -32,6 +33,7 @@ const GlobalStyle = createGlobalStyle`
     display: none;
   }
   body {
+    background-color:${(props) => props.theme.bgColor};
     line-height: 1;
   }
   menu, ol, ul {
@@ -53,11 +55,11 @@ const GlobalStyle = createGlobalStyle`
 
 function App() {
   return (
-    <>
+    <ThemeProvider theme={lightTheme}>
       <GlobalStyle />
 
       <ToDoPage />
-    </>
+    </ThemeProvider>
   );
 }
 

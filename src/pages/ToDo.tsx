@@ -1,11 +1,12 @@
 import {
   DndContext,
   DragEndEvent,
+  DragOverEvent,
   DragOverlay,
   DragStartEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import ToDoGroup, { IItem } from 'components/todo/Group';
+import ToDoGroup from 'components/todo/Group';
 import ToDoItem from 'components/todo/Item';
 import { useState } from 'react';
 import styled from 'styled-components';
@@ -40,10 +41,21 @@ const initialData = [
   },
 ];
 
-const Container = styled.div`
+const Wrapper = styled.div`
   display: flex;
-  padding: 16px;
-  gap: 16px;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+`;
+
+const Boards = styled.div`
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  grid-template-columns: repeat(3, 1fr);
 `;
 
 const ToDoPage = () => {
@@ -54,6 +66,61 @@ const ToDoPage = () => {
     const { active } = event;
 
     setActiveId(active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+
+    if (!active || !over) {
+      return;
+    }
+
+    const activeGroupId = active.data.current?.sortable.containerId;
+    const overGroupId = over.data.current?.sortable.containerId || over.id;
+
+    if (activeGroupId !== overGroupId) {
+      const overIndex = !!over.data.current
+        ? over.data.current.sortable.index
+        : (datas.find((group) => group.id === overGroupId)?.items || [])
+            .length + 1;
+
+      const activeGroup = datas.find((group) => group.id === activeGroupId);
+      const overGroup = datas.find((group) => group.id === overGroupId);
+
+      if (!!activeGroup && !!overGroup) {
+        const activeItem = activeGroup.items.find(
+          (item) => item.id === active.id
+        );
+
+        if (activeItem) {
+          const newItems = [
+            ...overGroup.items.slice(0, overIndex),
+            activeItem,
+            ...overGroup.items.slice(overIndex),
+          ];
+
+          setDatas(
+            datas.map((group) => {
+              if (group.id === activeGroup.id) {
+                return {
+                  ...group,
+                  items: group.items.filter((item) => item.id !== active.id),
+                };
+              }
+
+              if (group.id === overGroup.id) {
+                return {
+                  ...group,
+                  items: newItems,
+                };
+              }
+
+              return group;
+            })
+          );
+        }
+      }
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -78,7 +145,10 @@ const ToDoPage = () => {
 
       if (!!activeItem) {
         const activeIndex = active.data.current?.sortable.index;
-        const overIndex = over.data.current?.sortable.index;
+        const overIndex = !!over.data.current
+          ? over.data.current.sortable.index
+          : (datas.find((group) => group.id === overGroupId)?.items || [])
+              .length + 1;
 
         if (activeGroup.id === overGroup.id) {
           if (activeIndex !== overIndex) {
@@ -103,8 +173,8 @@ const ToDoPage = () => {
             ...overGroup.items.slice(overIndex),
           ];
 
-          setDatas((prev) =>
-            prev.map((group) => {
+          setDatas(
+            datas.map((group) => {
               if (group.id === activeGroup.id) {
                 return {
                   ...group,
@@ -118,26 +188,35 @@ const ToDoPage = () => {
                   items: newItems,
                 };
               }
+
               return group;
             })
           );
         }
       }
     }
+
+    setActiveId(null);
   };
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <Container>
-        {datas.map((data) => (
-          <ToDoGroup
-            key={data.id}
-            id={data.id}
-            title={data.title}
-            items={data.items}
-          />
-        ))}
-      </Container>
+    <DndContext
+      onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnd={handleDragEnd}
+    >
+      <Wrapper>
+        <Boards>
+          {datas.map((data) => (
+            <ToDoGroup
+              key={data.id}
+              id={data.id}
+              title={data.title}
+              items={data.items}
+            />
+          ))}
+        </Boards>
+      </Wrapper>
 
       <DragOverlay>
         {activeId ? (
