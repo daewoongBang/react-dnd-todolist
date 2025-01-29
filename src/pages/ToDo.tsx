@@ -6,40 +6,11 @@ import {
   DragStartEvent,
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import { useAtom } from 'jotai';
+import { activeIdState, toDosState } from 'state/todo';
+import styled from 'styled-components';
 import ToDoGroup from 'components/todo/Group';
 import ToDoItem from 'components/todo/Item';
-import { useState } from 'react';
-import styled from 'styled-components';
-
-const initialData = [
-  {
-    id: 'group-1',
-    title: 'To Do',
-    items: [
-      { id: 'item-1', content: 'Task 1' },
-      { id: 'item-2', content: 'Task 2' },
-      { id: 'item-3', content: 'Task 3' },
-      { id: 'item-4', content: 'Task 4' },
-      { id: 'item-5', content: 'Task 5' },
-    ],
-  },
-  {
-    id: 'group-2',
-    title: 'In Progress',
-    items: [
-      { id: 'item-6', content: 'Task 6' },
-      { id: 'item-7', content: 'Task 7' },
-      { id: 'item-8', content: 'Task 8' },
-      { id: 'item-9', content: 'Task 9' },
-      { id: 'item-10', content: 'Task 10' },
-    ],
-  },
-  {
-    id: 'group-3',
-    title: 'Done',
-    items: [],
-  },
-];
 
 const Wrapper = styled.div`
   display: flex;
@@ -59,8 +30,8 @@ const Boards = styled.div`
 `;
 
 const ToDoPage = () => {
-  const [datas, setDatas] = useState(initialData);
-  const [activeId, setActiveId] = useState<string | null>();
+  const [datas, setDatas] = useAtom(toDosState);
+  const [activeId, setActiveId] = useAtom(activeIdState);
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
@@ -79,13 +50,13 @@ const ToDoPage = () => {
     const overGroupId = over.data.current?.sortable.containerId || over.id;
 
     if (activeGroupId !== overGroupId) {
+      const activeGroup = datas.find((group) => group.id === activeGroupId);
+      const overGroup = datas.find((group) => group.id === overGroupId);
+
       const overIndex = !!over.data.current
         ? over.data.current.sortable.index
         : (datas.find((group) => group.id === overGroupId)?.items || [])
             .length + 1;
-
-      const activeGroup = datas.find((group) => group.id === activeGroupId);
-      const overGroup = datas.find((group) => group.id === overGroupId);
 
       if (!!activeGroup && !!overGroup) {
         const activeItem = activeGroup.items.find(
@@ -101,21 +72,17 @@ const ToDoPage = () => {
 
           setDatas(
             datas.map((group) => {
-              if (group.id === activeGroup.id) {
-                return {
-                  ...group,
-                  items: group.items.filter((item) => item.id !== active.id),
-                };
-              }
-
-              if (group.id === overGroup.id) {
-                return {
-                  ...group,
-                  items: newItems,
-                };
-              }
-
-              return group;
+              return group.id === activeGroup.id
+                ? {
+                    ...group,
+                    items: group.items.filter((item) => item.id !== active.id),
+                  }
+                : group.id === overGroup.id
+                ? {
+                    ...group,
+                    items: newItems,
+                  }
+                : group;
             })
           );
         }
@@ -175,21 +142,17 @@ const ToDoPage = () => {
 
           setDatas(
             datas.map((group) => {
-              if (group.id === activeGroup.id) {
-                return {
-                  ...group,
-                  items: group.items.filter((item) => item.id !== active.id),
-                };
-              }
-
-              if (group.id === overGroup.id) {
-                return {
-                  ...group,
-                  items: newItems,
-                };
-              }
-
-              return group;
+              return group.id === activeGroup.id
+                ? {
+                    ...group,
+                    items: group.items.filter((item) => item.id !== active.id),
+                  }
+                : group.id === overGroup.id
+                ? {
+                    ...group,
+                    items: newItems,
+                  }
+                : group;
             })
           );
         }
